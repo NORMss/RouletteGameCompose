@@ -1,5 +1,8 @@
 package com.norm.myroulettegamecompose.roulette_screen
 
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,22 +17,56 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.norm.myroulettegamecompose.R
+import com.norm.myroulettegamecompose.utils.NumberUtil
+import kotlin.math.roundToInt
 
 @Composable
 fun RouletteScreen() {
+    var rotationValue by remember {
+        mutableStateOf(0f)
+    }
+    var number by remember {
+        mutableStateOf(0)
+    }
+
+    var btnEnable by remember {
+        mutableStateOf(true)
+    }
+
+    val angle: Float by animateFloatAsState(
+        targetValue = rotationValue,
+        animationSpec = tween(
+            durationMillis = (1..5).random() * 1000,
+            easing = LinearOutSlowInEasing
+        ),
+        label = "animate_roulette",
+        finishedListener = {
+            val index =
+                (((360 - it % 360) / (360f / NumberUtil.listNumber.size)))
+                    .roundToInt()
+            number = NumberUtil.listNumber[index]
+            btnEnable = true
+        }
+    )
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "0",
+            text = number.toString(),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(128.dp)
@@ -47,24 +84,29 @@ fun RouletteScreen() {
             Image(
                 painter = painterResource(id = R.drawable.roulette_512),
                 contentDescription = "roulette",
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .rotate(angle + ((360f / NumberUtil.listNumber.size) / 2))
             )
             Image(
                 painter = painterResource(id = R.drawable.arrow_512),
                 contentDescription = "arrow",
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
             )
         }
         Button(
             onClick = {
-
+                rotationValue = (720..1440).random().toFloat() + angle
+                btnEnable = false
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Red
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp)
+                .padding(10.dp),
+            enabled = btnEnable
         ) {
             Text(
                 text = "Start",
